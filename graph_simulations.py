@@ -8,7 +8,7 @@ import matplotlib.ticker as plticker
 
 Play = namedtuple(
   'Play',
-  ['parameters', 'p_ppb', 'p_autombon', 'p_deck', 'p_goal',
+  ['parameters', 'p_level', 'p_autombon', 'p_deck', 'p_goal',
    'eggs', 'birds', 'game_end_bonus', 'round_end_bonus', 'total'])
 
 def read():
@@ -21,7 +21,7 @@ def read():
       for row in reader:
         play = Play(
           parameters = row[0],
-          p_ppb = int(row[1]),
+          p_level = int(row[1]),
           p_autombon = row[2] == 'True',
           p_deck = row[3],
           p_goal = row[4],
@@ -47,9 +47,11 @@ def calculate(rows, filter, field='total'):
       c[key] = c[key] + 1
   return c
 
+difficulties = { 3: 'Eaglet', 4: 'Eagle', 5: 'Eagle-eyed Eagle'}
+
 def p_all(): return PlotLine(lambda _ : True, 'all')
 def p_deck(v): return PlotLine(lambda x : x.p_deck == v, f'deck[{v}]')
-def p_ppb(v): return PlotLine(lambda x : x.p_ppb == v, f'ppb[{v}]')
+def p_level(v): return PlotLine(lambda x : x.p_level == v, f'difficulty[{difficulties[v]}]')
 def p_autombon(v): return PlotLine(lambda x : x.p_autombon == v, f'autumbon[{v}]')
 def p_goal(v): return PlotLine(lambda x : x.p_goal == v, f'goal[{v}]')
 def axis(axis, plotline):
@@ -104,15 +106,15 @@ def go():
     fig.savefig(f'{basename}.png')
     # plt.show()
 
-  graph('By ppb', 'byppb', p_ppb(3,), p_ppb(4), p_ppb(5))
+  graph('By level', 'bylevel', p_level(3,), p_level(4), p_level(5))
   graph('By deck', 'bydeck', p_deck('base'), p_deck('ee'), p_deck('both'))
   graph('With Autumbon Society', 'byautumbon', p_autombon(False), p_autombon(True))
-  graph('By goal', 'bygoal', p_goal('high'), p_goal('low'))
+  graph('By goal', 'bygoal', p_goal('RaspbLifeFellow'), p_goal('Autwitcher'))
   graph('all', 'all',
      p_all(),
-     axis(1, p_ppb(3)), axis(1, p_ppb(4)), axis(1, p_ppb(5)),
+     axis(1, p_level(3)), axis(1, p_level(4)), axis(1, p_level(5)),
      axis(2, p_deck('base')), axis(2, p_deck('ee')), axis(2, p_deck('both')),
      axis(3, p_autombon(False)), axis(3, p_autombon(True)),
-     axis(4, p_goal('high')), axis(4, p_goal('low')))
+     axis(4, p_goal('RaspbLifeFellow')), axis(4, p_goal('Autwitcher')))
 
 go()
