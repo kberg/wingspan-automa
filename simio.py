@@ -15,7 +15,7 @@ COLUMNS = [
 
 Play = namedtuple('Play', COLUMNS)
 
-def read(filename):
+def readPlays(filename):
   print(f'Reading {filename}')
   rows = []
   with open(filename, newline='') as csvfile:
@@ -37,13 +37,24 @@ def read(filename):
       rows.append(play)
   return rows
 
-def write(filename, plays):
+def writePlays(filename, plays):
   try:
     with open(filename, 'w') as csvfile:
       writer = csv.DictWriter(csvfile, fieldnames=COLUMNS)
       writer.writeheader()
       for play in plays:
         writer.writerow(play._asdict())
+
+  except IOError:
+    print(f'Error! {e}')
+
+def writeStats(filename, statsTable):
+  try:
+    with open(filename, 'w') as csvfile:
+      writer = csv.DictWriter(csvfile, fieldnames=['plot', 'mean', 'stdev'])
+      writer.writeheader()
+      for row in statsTable:
+        writer.writerow({'plot': row[0], 'mean': row[1], 'stdev': row[2]})
 
   except IOError:
     print(f'Error! {e}')

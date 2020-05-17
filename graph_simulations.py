@@ -37,7 +37,7 @@ def axis(axis, plotline):
   return plotline
 
 def go():
-  rows = simio.read("scores.csv")
+  rows = simio.readPlays("scores.csv")
   print(f'read {len(rows)} rows')
 
   def graph(title, basename, *plots):
@@ -47,11 +47,7 @@ def go():
     ax.xaxis.set_minor_locator(plticker.MultipleLocator(base=2.0))
     ax.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
 
-    def addPlot(plotline, nth):
-      print("Plot")
-      result = calculate(rows, plotline.filter)
-      mean = statistics.mean(result.elements())
-      stdev = statistics.stdev(result.elements())
+    def addPlot(plotline, nth, result, mean, stdev):
       height = max(result.values())
       xs = sorted(result.keys())
       ys = [result[x] for x in xs]
@@ -75,10 +71,17 @@ def go():
         linestyle=LINE_STYLES[int(nth / 6)],
         marker='^')
 
-    nth = 0
+    statsTable=[]
+    nth=0
+
     for plot in plots:
-      addPlot(plot, nth)
+      print(f'Calculating {plot.label}')
+      result = calculate(rows, plot.filter)
+      mean = statistics.mean(result.elements())
+      stdev = statistics.stdev(result.elements())
+      addPlot(plot, nth, result, mean, stdev)
       nth = nth + 1
+      statsTable.append([plot.label,mean,stdev])
 
     ax.set(xlabel='score', ylabel='count', title=title)
 
@@ -86,6 +89,8 @@ def go():
     ax.grid()
 
     fig.savefig(f'{basename}.png')
+    simio.writeStats(f'{basename}.csv', statsTable)
+
     plt.show()
 
   graph('By level', 'bylevel', p_level(3,), p_level(4), p_level(5))

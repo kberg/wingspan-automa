@@ -244,7 +244,7 @@ def run_all():
           run_simulation(params, plays)
 
   print(f'writing {len(plays)} rows')
-  simio.write('scores.csv', plays)
+  simio.writePlays('scores.csv', plays)
 
 def main():
   run_all()
