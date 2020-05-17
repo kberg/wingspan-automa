@@ -1,37 +1,13 @@
-from collections import namedtuple, Counter
-import csv
+from collections import Counter
 from cycler import cycler
 import matplotlib
 import matplotlib.pyplot as plt
 import statistics
 import matplotlib.ticker as plticker
+import simio
 
-Play = namedtuple(
-  'Play',
-  ['parameters', 'p_level', 'p_autombon', 'p_deck', 'p_goal',
-   'eggs', 'birds', 'game_end_bonus', 'round_end_bonus', 'total'])
-
-def read():
-  print("Reading")
-  rows = []
-  with open('scores.csv', newline='') as csvfile:
-      reader = csv.reader(csvfile, delimiter=',')
-      next(reader) # skip header, todo compare header with namedtuple to verify
-                   # fields are mapped.
-      for row in reader:
-        play = Play(
-          parameters = row[0],
-          p_level = int(row[1]),
-          p_autombon = row[2] == 'True',
-          p_deck = row[3],
-          p_goal = row[4],
-          eggs = int(row[5]),
-          birds = int(row[6]),
-          game_end_bonus = int(row[7]),
-          round_end_bonus = int(row[8]),
-          total = int(row[9]))
-        rows.append(play)
-  return rows
+LINE_STYLES = ['solid', 'dashed', 'dashdot', 'dotted']
+NUM_STYLES = len(LINE_STYLES)
 
 class PlotLine:
   def __init__(self, filter, label, axis=0):
@@ -54,18 +30,21 @@ def p_deck(v): return PlotLine(lambda x : x.p_deck == v, f'deck[{v}]')
 def p_level(v): return PlotLine(lambda x : x.p_level == v, f'difficulty[{difficulties[v]}]')
 def p_autombon(v): return PlotLine(lambda x : x.p_autombon == v, f'autumbon[{v}]')
 def p_goal(v): return PlotLine(lambda x : x.p_goal == v, f'goal[{v}]')
+def p_params(v): return PlotLine(lambda x : x.parameters == v, v)
+
 def axis(axis, plotline):
   plotline.axis = axis
   return plotline
 
 def go():
-  rows = read()
+  rows = simio.read("scores.csv")
+  print(f'read {len(rows)} rows')
 
   def graph(title, basename, *plots):
+    print(f'Generating {title}')
     fig, ax = plt.subplots()
     ax.get_yaxis().set_ticklabels([]) # Hide y axis values
     ax.xaxis.set_minor_locator(plticker.MultipleLocator(base=2.0))
-
     ax.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
 
     def addPlot(plotline, nth):
@@ -79,11 +58,13 @@ def go():
   
       # Choose color here so the plot and error bars share it.
       color = next(ax._get_lines.prop_cycler)['color']
+
       ax.plot(
         xs,
         ys,
         color=color,
-        label=plotline.label)
+        label=plotline.label,
+        linestyle=LINE_STYLES[int(nth / 6)])
 
       ax.errorbar(
         mean,
@@ -91,6 +72,7 @@ def go():
         xerr=stdev,
         snap=True,
         color=color,
+        linestyle=LINE_STYLES[int(nth / 6)],
         marker='^')
 
     nth = 0
@@ -104,7 +86,7 @@ def go():
     ax.grid()
 
     fig.savefig(f'{basename}.png')
-    # plt.show()
+    plt.show()
 
   graph('By level', 'bylevel', p_level(3,), p_level(4), p_level(5))
   graph('By deck', 'bydeck', p_deck('base'), p_deck('ee'), p_deck('both'))

@@ -1,6 +1,6 @@
 import random
 import sys
-import csv
+import simio
 
 def log(text):
   if (False):
@@ -108,8 +108,8 @@ class Automa:
     scores = {
         'eggs': self.eggs,
         'birds': self.birds * parameters['level'],
-        'game-end-bonus': sum(self.bonus_birds),
-        'round-end-bonus': sum(self.round_bonuses)
+        'game_end_bonus': sum(self.bonus_birds),
+        'round_end_bonus': sum(self.round_bonuses)
     }
 
     scores['total'] = sum(scores.values())
@@ -187,13 +187,10 @@ class Game:
 # At the start of a round, replace the birds.
 #
 
-def run_simulation(params, writer):
+def run_simulation(params, plays):
   print(params)
 
   fmtdparams = '{c[level]}-{c[autombon]}-{c[deck]}-{c[goal]}'.format(c = params)
-
-  pp_params = dict((f'p_{name}', val) for name, val in params.items())
-
   for x in range(0, 50000):
     if x % 5000 == 0:
       print(f' #{x}')
@@ -214,8 +211,19 @@ def run_simulation(params, writer):
     for i in range(0, 5):
       g.playTurn()
     g.completeRound()
-    data = g.automa.score(params)
-    writer.writerow({**data, **{'parameters': fmtdparams}, **pp_params})
+    score = g.automa.score(params)
+
+    plays.append(simio.Play(
+      parameters=fmtdparams,
+      p_level=params['level'],
+      p_autombon=params['autombon'],
+      p_deck=params['deck'],
+      p_goal=params['goal'],
+      eggs=score['eggs'],
+      birds=score['birds'],
+      game_end_bonus=score['game_end_bonus'],
+      round_end_bonus=score['round_end_bonus'],
+      total=score['total']))
 
 def run_all():
   levels = [3,4,5]
@@ -223,19 +231,20 @@ def run_all():
   decks = ['base', 'ee', 'both']
   goals = ['Autwitcher', 'RaspbLifeFellow']
 
-  csv_columns = ['parameters', 'p_level', 'p_autombon', 'p_deck', 'p_goal', 'eggs', 'birds', 'game-end-bonus', 'round-end-bonus', 'total']
-  try:
-    with open('scores.csv', 'w') as csvfile:
-      writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-      writer.writeheader()
-      for level in levels:
-        for autombon in autombons:
-          for deck in decks:
-            for goal in goals:
-              params = { 'level': level, 'autombon': autombon, 'deck': deck, 'goal': goal}
-              run_simulation(params, writer)
-  except IOError:
-    print(f'Error! {e}')
+  plays = []
+  for level in levels:
+    for autombon in autombons:
+      for deck in decks:
+        for goal in goals:
+          params = { 
+            'level': level,
+            'autombon': autombon,
+            'deck': deck,
+            'goal': goal}
+          run_simulation(params, plays)
+
+  print(f'writing {len(plays)} rows')
+  simio.write('scores.csv', plays)
 
 def main():
   run_all()
