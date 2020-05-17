@@ -162,10 +162,10 @@ class Game:
   def playTurn(self):
     # human removes 0, 1 or 2 cards.
     x = random.random()
-    if (x < .2):
+    if (x < .15):
       self.deck.remove(random.choice(self.deck))
       self.human_draw = self.human_draw + 1
-    if (x < .4):
+    if (x < .3):
       self.deck.remove(random.choice(self.deck))
       self.human_draw = self.human_draw + 1
     self.fillDisplay()
