@@ -130,6 +130,7 @@ class Game:
     self.automa = Automa()
     self.round = -1
     self.prepareRound()
+    self.human_draw = 0
 
   def prepareRound(self):
     self.round = self.round + 1
@@ -163,8 +164,10 @@ class Game:
     x = random.random()
     if (x < .2):
       self.deck.remove(random.choice(self.deck))
+      self.human_draw = self.human_draw + 1
     if (x < .4):
       self.deck.remove(random.choice(self.deck))
+      self.human_draw = self.human_draw + 1
     self.fillDisplay()
 
     self.automa.playCard(self, self.parameters['goal'])
@@ -215,6 +218,7 @@ def run_simulation(params, writer):
       g.playTurn()
     g.completeRound()
     data = g.automa.score(params)
+    data["human-draw"] = g.human_draw
     writer.writerow({**data, **{'parameters': fmtdparams}, **pp_params})
 
 def run_all():
@@ -223,7 +227,7 @@ def run_all():
   decks = ['base', 'ee', 'both']
   goals = ['Autwitcher', 'RaspbLifeFellow']
 
-  csv_columns = ['parameters', 'p_level', 'p_autombon', 'p_deck', 'p_goal', 'eggs', 'birds', 'game-end-bonus', 'round-end-bonus', 'total']
+  csv_columns = ['parameters', 'p_level', 'p_autombon', 'p_deck', 'p_goal', 'eggs', 'birds', 'game-end-bonus', 'round-end-bonus', 'total', 'human-draw']
   try:
     with open('scores.csv', 'w') as csvfile:
       writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
